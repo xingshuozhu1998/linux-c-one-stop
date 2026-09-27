@@ -15,6 +15,6 @@ RUN git config --global user.name xingshuozhu1998 \
     && git config --global http.proxy http://192.168.10.101:17890 \
     && git config --global https.proxy http://192.168.10.101:17890
 
-WORKDIR /workspace
+WORKDIR /data/zhuxs/cs_learning/00_linux_c_one_shot_learning
 EXPOSE 8765
-CMD ["python3", "-m", "http.server", "8765", "--bind", "0.0.0.0", "--directory", "/workspace"]
+CMD ["python3", "-m", "http.server", "8765", "--bind", "0.0.0.0", "--directory", "/data/zhuxs/cs_learning/00_linux_c_one_shot_learning"]

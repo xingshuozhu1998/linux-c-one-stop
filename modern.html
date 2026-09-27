@@ -32,9 +32,8 @@
 </div>
 
 <div class="sect1" id="start"><div class="titlepage"><div><div><h2 class="title">二、进入容器并完成第一轮实验</h2></div></div></div>
-<p>在主机打开 <code>http://127.0.0.1:18765/index.html</code>，或通过<a href="https://xingshuozhu1998.github.io/linux-c-one-stop/index.html">公开在线镜像</a>阅读原书；进入容器后，<code>/workspace</code> 就是本项目目录：</p>
+<p>在主机打开 <code>http://127.0.0.1:18765/index.html</code>，或通过<a href="https://xingshuozhu1998.github.io/linux-c-one-stop/index.html">公开在线镜像</a>阅读原书；容器默认工作目录与宿主机项目路径相同：</p>
 <pre class="screen">docker exec -it zhuxs_linux_c bash
-cd /workspace
 pwd
 gcc --version
 clang --version

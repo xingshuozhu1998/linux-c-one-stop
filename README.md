@@ -8,10 +8,10 @@
 
 ```sh
 docker exec -it zhuxs_linux_c bash
-cd /workspace
+pwd
 ```
 
-`/workspace` 绑定到 `/data/zhuxs/cs_learning/00_linux_c_one_shot_learning`。可在这里创建 `practice/` 写练习，文件会直接出现在主机目录。容器中的 GDB 可调试子进程；HTTP 服务由容器主进程提供。访问端口只绑定主机的 `127.0.0.1`；如果从另一台电脑经 SSH 连接，可用 `ssh -L 18765:127.0.0.1:18765 <主机>` 转发后在本机浏览器打开上述地址。
+宿主机与容器均使用 `/data/zhuxs/cs_learning/00_linux_c_one_shot_learning` 作为项目路径；进入容器时默认就在该目录。可在这里创建 `practice/` 写练习，文件会直接出现在主机目录。容器中的 GDB 可调试子进程；HTTP 服务由容器主进程提供。访问端口只绑定主机的 `127.0.0.1`；如果从另一台电脑经 SSH 连接，可用 `ssh -L 18765:127.0.0.1:18765 <主机>` 转发后在本机浏览器打开上述地址。
 
 如果以后需要重建容器，先确认练习文件都在绑定的工作目录，然后在仓库目录执行：
 
@@ -22,8 +22,8 @@ docker rm zhuxs_linux_c
 docker run -d --name zhuxs_linux_c --restart unless-stopped \
   --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
   -p 127.0.0.1:18765:8765 \
-  --mount type=bind,src=/data/zhuxs/cs_learning/00_linux_c_one_shot_learning,dst=/workspace \
-  -w /workspace zhuxs_linux_c:ubuntu24.04
+  --mount type=bind,src=/data/zhuxs/cs_learning/00_linux_c_one_shot_learning,dst=/data/zhuxs/cs_learning/00_linux_c_one_shot_learning \
+  -w /data/zhuxs/cs_learning/00_linux_c_one_shot_learning zhuxs_linux_c:ubuntu24.04
 printf 'protocol=https\nhost=github.com\n\n' | git credential fill | \
   docker exec -i zhuxs_linux_c git credential approve
 ```
@@ -42,7 +42,7 @@ printf 'protocol=https\nhost=github.com\n\n' | git credential fill | \
 
 ## 日常修改并同步到 GitHub 与书站
 
-容器里的 `/workspace` 与本机项目目录是同一个绑定目录；在任一处编辑，另一处立即可见。宿主机和当前容器都已配置 GitHub 凭证，以下命令可在任一环境执行。下面以宿主机为例；在容器内把首行改为 `cd /workspace`。开始一次新修改前，如果 `git status --short` 没有输出，可以先拉取远端更新：
+容器与宿主机中的项目路径相同；在任一处编辑，另一处立即可见。宿主机和当前容器都已配置 GitHub 凭证，以下命令可在任一环境执行。开始一次新修改前，如果 `git status --short` 没有输出，可以先拉取远端更新：
 
 ```sh
 cd /data/zhuxs/cs_learning/00_linux_c_one_shot_learning
