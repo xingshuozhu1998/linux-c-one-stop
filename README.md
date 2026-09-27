@@ -9,9 +9,10 @@
 ```sh
 docker exec -it zhuxs_linux_c bash
 pwd
+echo "$CODEX_HOME"
 ```
 
-宿主机与容器均使用 `/data/zhuxs/cs_learning/00_linux_c_one_shot_learning` 作为项目路径；进入容器时默认就在该目录。可在这里创建 `practice/` 写练习，文件会直接出现在主机目录。容器中的 GDB 可调试子进程；HTTP 服务由容器主进程提供。访问端口只绑定主机的 `127.0.0.1`；如果从另一台电脑经 SSH 连接，可用 `ssh -L 18765:127.0.0.1:18765 <主机>` 转发后在本机浏览器打开上述地址。
+宿主机的整个 `/data/zhuxs/cs_learning/` 映射到容器的同一路径；进入容器时默认位于 `/data/zhuxs/cs_learning/00_linux_c_one_shot_learning`。可在这里创建 `practice/` 写练习，文件会直接出现在主机目录。宿主机和容器的 `~/.bashrc` 都设置 `CODEX_HOME=/data/zhuxs/cs_learning/codex_bk/.codex`；[OpenAI Docs](https://learn.chatgpt.com/docs/config-file/config-advanced)说明本地会话历史保存在 `CODEX_HOME` 下，因此新启动的 Codex CLI 将使用同一份历史。现有 Codex 进程要重新启动才会读取新环境。容器中的 GDB 可调试子进程；HTTP 服务由容器主进程提供。访问端口只绑定主机的 `127.0.0.1`；如果从另一台电脑经 SSH 连接，可用 `ssh -L 18765:127.0.0.1:18765 <主机>` 转发后在本机浏览器打开上述地址。
 
 如果以后需要重建容器，先确认练习文件都在绑定的工作目录，然后在仓库目录执行：
 
@@ -22,13 +23,13 @@ docker rm zhuxs_linux_c
 docker run -d --name zhuxs_linux_c --restart unless-stopped \
   --cap-add=SYS_PTRACE --security-opt seccomp=unconfined \
   -p 127.0.0.1:18765:8765 \
-  --mount type=bind,src=/data/zhuxs/cs_learning/00_linux_c_one_shot_learning,dst=/data/zhuxs/cs_learning/00_linux_c_one_shot_learning \
+  --mount type=bind,src=/data/zhuxs/cs_learning,dst=/data/zhuxs/cs_learning \
   -w /data/zhuxs/cs_learning/00_linux_c_one_shot_learning zhuxs_linux_c:ubuntu24.04
 printf 'protocol=https\nhost=github.com\n\n' | git credential fill | \
   docker exec -i zhuxs_linux_c git credential approve
 ```
 
-最后一条命令在宿主机执行：它把宿主机已保存的 GitHub 凭证经标准输入写入新容器的 `store` 凭证助手，不把令牌放进 Docker 镜像或本仓库。Dockerfile 还设置了容器的 Git HTTP/HTTPS 代理 `http://192.168.10.101:17890`。当前运行中的容器已设置相同的 Git 用户名、邮箱、凭证和代理；通过代理执行 `git ls-remote origin HEAD` 与 `git push --dry-run origin main` 均成功。
+最后一条命令在宿主机执行：它把宿主机已保存的 GitHub 凭证经标准输入写入新容器的 `store` 凭证助手，不把令牌放进 Docker 镜像或本仓库。Dockerfile 还设置了容器的 Git HTTP/HTTPS 代理 `http://192.168.10.101:17890` 和 `CODEX_HOME`；Codex CLI 由你进入容器后自行安装。现有的 Codex 登录和会话文件来自共享目录，不打包进镜像。
 
 ## 学习与修订依据
 
