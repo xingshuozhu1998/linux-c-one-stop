@@ -1,10 +1,10 @@
 # Linux C 编程一站式学习：本地镜像与现代实操
 
-本仓库以 [akaedu/book 的 `gh-pages` 分支](https://github.com/akaedu/book/tree/gh-pages)为原书基线，保留原始 Git 历史；基线提交是 `9a3baabb681acbd1611a8798ccb32b3f80022f97`。`index.html`、`styles.css` 和 `images/` 组成与[原站](https://akaedu.github.io/book/index.html)相同的静态页面。首页只新增[现代阅读指南与勘误](modern.html)入口；原作者前言与版权说明保留在[原书首页](index.html)及[GNU 自由文档许可证](apb.html)。
+本仓库以 [akaedu/book 的 `gh-pages` 分支](https://github.com/akaedu/book/tree/gh-pages)为原书基线，保留原始 Git 历史；基线提交是 `9a3baabb681acbd1611a8798ccb32b3f80022f97`。`index.html`、`styles.css` 和 `images/` 组成与[原站](https://akaedu.github.io/book/index.html)相同的静态页面。已发布的[在线镜像](https://xingshuozhu1998.github.io/book/index.html)保留原站排版和图片。首页只新增[现代阅读指南与勘误](modern.html)入口；原作者前言与版权说明保留在[原书首页](index.html)及[GNU 自由文档许可证](apb.html)。
 
 ## 阅读与进入容器
 
-本机已从现有的 `ubuntu:24.04` 镜像构建 `zhuxs_linux_c:ubuntu24.04`，并创建同名常驻容器。书页地址：<http://127.0.0.1:18765/index.html>。
+本机已从现有的 `ubuntu:24.04` 镜像构建 `zhuxs_linux_c:ubuntu24.04`，并创建同名常驻容器。本机书页地址：<http://127.0.0.1:18765/index.html>；公开书页地址：<https://xingshuozhu1998.github.io/book/index.html>。
 
 ```sh
 docker exec -it zhuxs_linux_c bash
@@ -34,4 +34,4 @@ docker run -d --name zhuxs_linux_c --restart unless-stopped \
 
 ## Git 来源与个人 Fork
 
-当前仓库的 `upstream` 指向原作者仓库，`book-original` 指向未修订的原书基线，`main` 用于本项目修订。Fork 到个人 GitHub 后，把个人仓库设为 `origin` 并推送 `main` 即可；推送前先核对当前 GitHub 账号和目标仓库地址。GitHub Pages 若从 `main` 的根目录发布，可直接访问相同的静态页面。
+个人 Fork 已创建在 [xingshuozhu1998/book](https://github.com/xingshuozhu1998/book)。当前仓库的 `upstream` 指向原作者仓库，`origin` 指向个人 Fork，`book-original` 指向未修订的原书基线，`main` 用于本项目修订。GitHub Pages 已设置为从 `main` 根目录发布，在线镜像实测能返回与本地相同的首页、指南、样式、图片和已修订章节字节内容。
