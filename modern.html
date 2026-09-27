@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="zh-cn" xml:lang="zh-cn">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <title>现代阅读指南与勘误 - Linux C编程一站式学习</title>
+  <link rel="stylesheet" href="styles.css" type="text/css" />
+</head>
+<body>
+<div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">现代阅读指南与勘误</th></tr><tr><td width="20%" align="left"><a href="index.html">上一页</a></td><th width="60%" align="center">Linux C编程一站式学习</th><td width="20%" align="right"><a href="pr01.html">下一页</a></td></tr></table><hr /></div>
+<div class="chapter">
+<div class="titlepage"><div><div><h1 class="title">现代阅读指南与勘误</h1></div></div></div>
+<p>原书写于 2008—2009 年，适合用来串联 C 语言、机器表示、编译链接和 Linux 系统编程。书中的 32 位 x86 地址、旧版 GCC 诊断、网络接口名称等，是当时的实验环境，不应直接当成今天所有机器的通则。本页给出本项目的实操约定；原作者的<a href="pr02.html">前言</a>与绝大多数原始页面仍保持原貌。下文的建议针对学习路径，不表示某种工具的行业使用率。</p>
+
+<div class="toc"><p><b>目录</b></p><dl>
+<dt><a href="#model">一、建立五层心智模型</a></dt>
+<dt><a href="#start">二、进入容器并完成第一轮实验</a></dt>
+<dt><a href="#route">三、按原书章节学习</a></dt>
+<dt><a href="#errata">四、已核实的勘误</a></dt>
+<dt><a href="#limits">五、验证范围与资料</a></dt>
+</dl></div>
+
+<div class="sect1" id="model"><div class="titlepage"><div><div><h2 class="title">一、建立五层心智模型</h2></div></div></div>
+<ol>
+<li><b>C 语言规则：</b>源码表达的值、类型、对象生命周期和未定义行为，首先由所选 C 标准约束。C23 是现行标准；本书主体按旧标准编写，本项目先显式用 C17 复现。标准版本与编译器支持是两件事，不能以一次编译成功代替标准判断。参见 <a href="https://open-std.org/jtc1/sc22/wg14/www/projects.html">WG14 标准项目清单</a>。</li>
+<li><b>编译工具链：</b>预处理、编译、汇编、链接逐步把源码变成目标文件和可执行文件。<code>gcc -E</code>、<code>-S</code>、<code>-c</code>分别留下中间结果；Make 根据依赖关系决定是否重建。参见 <a href="https://gcc.gnu.org/onlinedocs/gcc/Overall-Options.html">GCC 阶段选项</a>和 <a href="https://www.gnu.org/software/make/manual/make.html">GNU Make 手册</a>。</li>
+<li><b>ABI（应用二进制接口）与 ELF（可执行与可链接格式）：</b>目标平台规定类型布局、寄存器传参和机器码约定；ELF 文件保存符号、节及装载信息。看见同一段 C 在旧书和本机产生不同汇编，先核对 32/64 位 ABI 和编译选项。参见 <a href="https://gabi.xinuos.com/">ELF 规范</a>与 <a href="https://gitlab.com/x86-psABIs/x86-64-ABI">x86-64 ABI</a>。</li>
+<li><b>运行库与内核：</b><code>printf</code> 属于 C 库接口，<code>read</code> 是 POSIX 接口，Linux 内核再提供系统调用。<code>FILE *</code>、文件描述符、内核打开文件对象是相关但不同的层次；线程和 socket 也要问清库接口与内核对象各是什么。参见 <a href="https://sourceware.org/glibc/manual/latest/html_node/Introduction.html">glibc 手册</a>和 <a href="https://pubs.opengroup.org/onlinepubs/9799919799/">POSIX.1-2024</a>。</li>
+<li><b>容器边界：</b>本容器固定 Ubuntu 24.04 的用户态工具和库，工作目录通过绑定挂载与主机共享；容器仍使用主机 Linux 内核。观察系统调用、调度和文件系统时，要区分镜像提供的用户态与主机提供的内核。参见 <a href="https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/">Docker 容器说明</a>。</li>
+</ol>
+<p>每次遇到不理解的现象，依次问：<b>源代码属于哪一版 C？编译器怎样翻译？目标 ABI 是什么？调用落在哪个库或内核接口？容器和主机各提供了什么？</b>这条因果链是后续理解 AI 基础设施中内存分配、数据搬运、并发执行和性能剖析的起点。</p>
+</div>
+
+<div class="sect1" id="start"><div class="titlepage"><div><div><h2 class="title">二、进入容器并完成第一轮实验</h2></div></div></div>
+<p>在主机打开 <code>http://127.0.0.1:18765/index.html</code> 阅读原书；进入容器后，<code>/workspace</code> 就是本项目目录：</p>
+<pre class="screen">docker exec -it zhuxs_linux_c bash
+cd /workspace
+pwd
+gcc --version
+clang --version
+uname -m
+getconf LONG_BIT</pre>
+<p>本机实测为 GCC 13.3、Clang 18.1、glibc 2.39、x86-64 与 64 位 <code>long</code>。容器中的 <code>uname -r</code> 报告的是主机内核。包更新或重新构建后，请以命令输出为准。</p>
+<p>先在容器中另建个人练习目录；编译产物也会保留在主机目录中。下面的第一个程序同时验证编辑、编译、运行三步：</p>
+<pre class="screen">mkdir -p practice
+cd practice
+cat &gt; hello.c &lt;&lt;'EOF'
+#include &lt;stdio.h&gt;
+int main(void) { puts("hello, C"); return 0; }
+EOF
+gcc -std=c17 -Wall -Wextra -Wpedantic -g -O0 hello.c -o hello
+./hello
+clang -std=c17 -Wall -Wextra -Wpedantic -g -O0 hello.c -o hello-clang
+./hello-clang</pre>
+<p>两次运行都应输出 <code>hello, C</code>。<code>-std=c17</code> 明确语言版本，<code>-g -O0</code> 方便按原书使用 GDB（GNU 调试器）单步观察。GCC 13 在本容器中尚不识别正式拼写 <code>-std=c23</code>，可用 <code>-std=c2x</code> 观察其部分 C23 实现；Clang 18 接受 <code>-std=c23</code>。两者均不应被假定完整实现了 C23，具体特性应查 <a href="https://gcc.gnu.org/projects/c-status.html">GCC</a>和 <a href="https://clang.llvm.org/c_status.html">Clang</a>状态表。</p>
+<p>把一个程序沿编译链展开：</p>
+<pre class="screen">gcc -std=c17 -E hello.c -o hello.i
+gcc -std=c17 -S -O0 hello.c -o hello.s
+gcc -std=c17 -c hello.c -o hello.o
+readelf -h hello.o
+readelf -S hello.o
+readelf -l hello
+objdump -d hello | less</pre>
+<p><code>hello.o</code> 是尚未链接的目标文件；<code>readelf -l</code> 应用于可执行文件 <code>hello</code> 时，才适合观察装载用的程序头。<code>readelf</code> 输出中的 ELF64、机器类型、节和段，将在<a href="ch18s05.html">第 18 章 ELF 文件</a>与<a href="ch20.html">第 20 章链接</a>反复出现。</p>
+</div>
+
+<div class="sect1" id="route"><div class="titlepage"><div><div><h2 class="title">三、按原书章节学习</h2></div></div></div>
+<table border="1" width="100%" summary="Reading route"><tr><th>书中位置</th><th>必须建立的关联</th><th>现代实操</th></tr>
+<tr><td><a href="pt01.html">第 I 部分：1—13 章</a></td><td>类型、表达式、控制流、函数、数组、算法与调试；理解“源码到底承诺了什么”。</td><td>用 <code>-std=c17 -Wall -Wextra -Wpedantic -g -O0</code>，在<a href="ch10.html">GDB 章</a>反复单步。数组越界练习额外用 <code>-fsanitize=address,undefined</code> 编译并链接；插桩检查只覆盖实际执行的路径。<a href="https://clang.llvm.org/docs/AddressSanitizer.html">ASan 文档</a></td></tr>
+<tr><td><a href="pt02.html">第 II 部分：14—27 章</a></td><td>数的表示、类型布局、指针、函数调用、ELF、链接、预处理、构建、库和数据结构之间的关系。</td><td>第 18—19 章原始汇编先按 32 位实验；同时对一个 64 位 C 程序执行 <code>gcc -S</code>、<code>readelf</code>、<code>objdump</code>。保留<a href="ch22.html">Makefile</a>作为依赖模型，掌握后再对照 <a href="https://cmake.org/cmake/help/latest/guide/tutorial/index.html">CMake 官方教程</a>。</td></tr>
+<tr><td><a href="pt03.html">第 III 部分：28—37 章</a></td><td>文件描述符、进程、虚拟内存、文件系统、信号、线程、网络如何构成程序的运行环境。</td><td>用 <code>strace</code> 观察库调用后的系统调用，用 <code>ip</code> 观察网络。<a href="ch29s01.html">ext2</a> 是磁盘格式案例，不代表当前工作目录一定使用 ext2；对照 <a href="https://docs.kernel.org/filesystems/ext4/">Linux ext4 文档</a>和实际挂载信息。</td></tr>
+</table>
+<p>AI 基础设施的衔接顺序：先用数组、指针、生命周期理解数据布局；再用 ABI、链接和装载理解动态库；用进程、虚拟内存、线程与文件 I/O 理解并发和数据路径；最后把同样的问题带到 GPU 运行时、通信库与服务进程。原书并不讲 GPU 或分布式训练，本页只是标出这些概念的先修关系。</p>
+</div>
+
+<div class="sect1" id="errata"><div class="titlepage"><div><div><h2 class="title">四、已核实的勘误</h2></div></div></div>
+<p>下表对应已直接改过的书页。区分“原文有误”和“旧环境输出”：前者改正概念，后者保留原实验但补上适用条件。</p>
+<table border="1" width="100%" summary="Errata"><tr><th>位置</th><th>修订原因及结果</th><th>核查依据</th></tr>
+<tr><td><a href="expr.expression.html">表达式</a>、<a href="ch03s02.html">函数</a>、<a href="ch21s04.html">预处理</a></td><td>原文说每个表达式都有值；<code>void</code> 表达式有类型，却不产生可使用的值。原文又把隐式函数声明说成会推导形参类型；C89 旧规则只假定 <code>int</code> 返回值、参数未知，C99 起删除该规则。</td><td><a href="https://www.open-std.org/jtc1/sc22/wg14/www/docs/n843.htm">WG14 C 草案</a>、<a href="https://gcc.gnu.org/gcc-14/porting_to.html">GCC 14 移植说明</a></td></tr>
+<tr><td><a href="ch08s01.html">数组</a></td><td>越界访问是未定义行为；普通编译不保证诊断。增补编译器插桩检查命令。</td><td><a href="https://clang.llvm.org/docs/AddressSanitizer.html">Clang ASan 文档</a></td></tr>
+<tr><td><a href="ch15s01.html">整型与指针宽度</a></td><td>指针宽度取决于 ABI，不能简单等同处理器位数；原文关于有符号数表示法的说法限定在旧标准，C23 已要求补码。</td><td><a href="https://gcc.gnu.org/onlinedocs/gcc/x86-Options.html">GCC x86 选项</a>、<a href="https://gcc.gnu.org/onlinedocs/gcc/Integers-implementation.html">GCC 整数实现</a></td></tr>
+<tr><td><a href="ch18s01.html">32 位汇编</a>、<a href="ch20s02.html">声明与链接</a></td><td>旧汇编命令补 <code>as --32</code> 和 <code>ld -m elf_i386</code>；跨源文件函数必须有正确原型，不能依赖隐式声明。</td><td><a href="https://sourceware.org/binutils/docs/binutils/as.html">GNU as 手册</a>、<a href="https://gcc.gnu.org/gcc-14/porting_to.html">GCC 14 移植说明</a></td></tr>
+<tr><td><a href="ch35s02.html">线程</a></td><td>原文误写 <code>thread_t</code> 并把 <code>pthread_t</code> 断言为地址；改为实现相关的标识符说明，编译命令用 <code>-pthread</code>。</td><td><a href="https://pubs.opengroup.org/onlinepubs/9799919799/functions/pthread_equal.html">POSIX pthread_equal</a>、<a href="https://gcc.gnu.org/onlinedocs/gcc/Link-Options.html">GCC 链接选项</a></td></tr>
+<tr><td><a href="ch36s05.html">IPv4 地址与路由</a></td><td>原文 E 类上界 247.255.255.255 是笔误；保留旧输出并补 <code>ip</code> 命令。</td><td><a href="https://www.iana.org/assignments/iana-ipv4-special-registry">IANA IPv4 注册表</a></td></tr>
+</table>
+</div>
+
+<div class="sect1" id="limits"><div class="titlepage"><div><div><h2 class="title">五、验证范围与资料</h2></div></div></div>
+<p>本项目保留原仓库历史；原站 219 个 HTML 页面、166 张图片和样式文件可在本地读取。原书的 4495 个站内文件引用均有对应文件。进一步检查发现原版有 279 处链接片段所指的页内锚点不存在；修订后仍有 278 处，点击它们会打开正确的页面，但通常停在页首，不能精确跳到引用段落。这是原站生成文件的遗留问题。对全书每一处历史断言和每段代码逐一验证仍需按章节进行，未在本轮勘误表中的内容不应视为已核准。有关工具链、标准及适用范围的完整官方来源，见仓库中的 <code>docs/toolchain-research.md</code>。</p>
+</div>
+</div>
+<div class="navfooter"><hr /><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a href="index.html">上一页</a></td><td width="20%" align="center"><a href="index.html">起始页</a></td><td width="40%" align="right"><a href="pr01.html">下一页</a></td></tr></table></div>
+</body></html>

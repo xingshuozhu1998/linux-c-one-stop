@@ -4,9 +4,9 @@
 main.c: In function ‘main’:
 main.c:8: warning: implicit declaration of function ‘push’
 main.c:12: warning: implicit declaration of function ‘is_empty’
-main.c:13: warning: implicit declaration of function ‘pop’</pre><p>这个问题我们在<a class="xref" href="ch03s02.html#func.ourfirstfunc">第 2 节 “自定义函数”</a>讨论过，由于编译器在处理函数调用代码时没有找到函数原型，只好根据函数调用代码做隐式声明，把这三个函数声明为：</p><pre class="programlisting">int push(char);
-int pop(void);
-int is_empty(void);</pre><p>现在你应该比学<a class="xref" href="ch03s02.html#func.ourfirstfunc">第 2 节 “自定义函数”</a>的时候更容易理解这条规则了。为什么编译器在处理函数调用代码时需要有函数原型？因为必须知道参数的类型和个数以及返回值的类型才知道生成什么样的指令。为什么隐式声明靠不住呢？因为隐式声明是从函数调用代码推导而来的，而事实上函数定义的形参类型可能跟函数调用代码传的实参类型并不一致，如果函数定义带有可变参数（例如<code class="literal">printf</code>），那么从函数调用代码也看不出来这个函数带有可变参数，另外，从函数调用代码也看不出来返回值应该是什么类型，所以隐式声明只能规定返回值都是<code class="literal">int</code>型的。既然隐式声明靠不住，那编译器为什么不自己去找函数定义，而非要让我们在调用之前写函数原型呢？因为编译器往往不知道去哪里找函数定义，像上面的例子，我让编译器编译<code class="literal">main.c</code>，而这几个函数的定义却在<code class="literal">stack.c</code>里，编译器又怎么会知道呢？所以编译器只能通过隐式声明来猜测函数原型，这种猜测往往会出错，但在比较简单的情况下还算可用，比如上一节的例子这么编译过去了也能得到正确结果。</p><p>现在我们在<code class="literal">main.c</code>中声明这几个函数的原型：</p><pre class="programlisting">/* main.c */
+main.c:13: warning: implicit declaration of function ‘pop’</pre><p>这个问题在<a class="xref" href="ch03s02.html#func.ourfirstfunc">第 2 节“自定义函数”</a>出现过：编译器处理 <code class="literal">main.c</code> 时尚不知道 <code class="literal">stack.c</code> 中函数的原型。C89 的旧规则只会假定一个返回 <code class="literal">int</code> 且参数信息未知的函数声明，并不会从调用实参推断出 <code class="literal">char</code> 或 <code class="literal">void</code> 形参；C99 起隐式函数声明已被删除。正确的原型是：</p><pre class="programlisting">void push(char);
+char pop(void);
+int is_empty(void);</pre><p>有原型，编译器才能核对参数、返回值和调用约定。编译器不会自动从另一个源文件寻找定义，因为编译与链接是不同阶段；应把共享原型放在头文件中，供实现文件和调用文件共同包含。原书中的警告文本是历史输出；GCC 14 起未声明函数调用默认会报错。参见 <a href="https://gcc.gnu.org/gcc-14/porting_to.html">GCC 14 移植说明</a>。</p><p>现在我们在<code class="literal">main.c</code>中声明这几个函数的原型：</p><pre class="programlisting">/* main.c */
 #include &lt;stdio.h&gt;
 
 extern void push(char);
