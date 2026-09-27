@@ -35,3 +35,31 @@ docker run -d --name zhuxs_linux_c --restart unless-stopped \
 ## Git 来源与个人 Fork
 
 个人 Fork 位于 [xingshuozhu1998/linux-c-one-stop](https://github.com/xingshuozhu1998/linux-c-one-stop)。当前仓库的 `upstream` 指向原作者仓库，`origin` 指向个人 Fork，`book-original` 指向未修订的原书基线，`main` 用于本项目修订。GitHub Pages 已设置为从 `main` 根目录发布，在线镜像实测能返回与本地相同的首页、指南、样式、图片和已修订章节字节内容。
+
+## 日常修改并同步到 GitHub 与书站
+
+容器里的 `/workspace` 与本机项目目录是同一个绑定目录；在任一处编辑，另一处立即可见。以下 Git 命令请在**宿主机终端**执行，因为你保存的 GitHub 凭证位于宿主机。开始一次新修改前，如果 `git status --short` 没有输出，可以先拉取远端更新：
+
+```sh
+cd /data/zhuxs/cs_learning/00_linux_c_one_shot_learning
+git status --short
+git pull --ff-only origin main
+```
+
+修改书页或笔记后，先在本机书站 <http://127.0.0.1:18765/index.html> 查看效果，再检查改动。下面用 `docs/c-notes.md` 举例；实际操作时把文件名换成这次修改的文件，避免把练习产生的可执行文件一起提交：
+
+```sh
+git status --short
+git diff --check
+git add docs/c-notes.md
+git diff --cached --check
+git diff --cached --stat
+git diff --cached -- docs/c-notes.md
+git commit -m "补充 C 语言学习笔记"
+git push origin main
+git status --short --branch
+```
+
+推送成功后，修改会立即出现在 [GitHub 仓库](https://github.com/xingshuozhu1998/linux-c-one-stop)，GitHub Pages 会从 `main` 根目录自动重新发布到[公开书站](https://xingshuozhu1998.github.io/linux-c-one-stop/index.html)。可到 [Actions 页面](https://github.com/xingshuozhu1998/linux-c-one-stop/actions)检查 `pages build and deployment` 是否成功；发布可能需要几分钟，[GitHub 文档](https://docs.github.com/en/pages/getting-started-with-github-pages/creating-a-github-pages-site)说明最长可能约 10 分钟。
+
+`docs/*.md` 笔记适合在 GitHub 仓库中阅读。本书站用 `.nojekyll` 直接发布静态文件，Markdown 不会自动变成与原书同样排版的网页；若想让笔记在书站中供读者浏览，可把内容写进 `modern.html`，或新建引用 `styles.css` 的 HTML 页，并在首页或现代指南中添加链接，然后按上述命令提交相关文件。
