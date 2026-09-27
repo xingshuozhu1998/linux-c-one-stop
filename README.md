@@ -24,7 +24,11 @@ docker run -d --name zhuxs_linux_c --restart unless-stopped \
   -p 127.0.0.1:18765:8765 \
   --mount type=bind,src=/data/zhuxs/cs_learning/00_linux_c_one_shot_learning,dst=/workspace \
   -w /workspace zhuxs_linux_c:ubuntu24.04
+printf 'protocol=https\nhost=github.com\n\n' | git credential fill | \
+  docker exec -i zhuxs_linux_c git credential approve
 ```
+
+最后一条命令在宿主机执行：它把宿主机已保存的 GitHub 凭证经标准输入写入新容器的 `store` 凭证助手，不把令牌放进 Docker 镜像或本仓库。Dockerfile 还设置了容器的 Git HTTP/HTTPS 代理 `http://192.168.10.101:17890`。当前运行中的容器已设置相同的 Git 用户名、邮箱、凭证和代理；通过代理执行 `git ls-remote origin HEAD` 与 `git push --dry-run origin main` 均成功。
 
 ## 学习与修订依据
 
@@ -38,7 +42,7 @@ docker run -d --name zhuxs_linux_c --restart unless-stopped \
 
 ## 日常修改并同步到 GitHub 与书站
 
-容器里的 `/workspace` 与本机项目目录是同一个绑定目录；在任一处编辑，另一处立即可见。以下 Git 命令请在**宿主机终端**执行，因为你保存的 GitHub 凭证位于宿主机。开始一次新修改前，如果 `git status --short` 没有输出，可以先拉取远端更新：
+容器里的 `/workspace` 与本机项目目录是同一个绑定目录；在任一处编辑，另一处立即可见。宿主机和当前容器都已配置 GitHub 凭证，以下命令可在任一环境执行。下面以宿主机为例；在容器内把首行改为 `cd /workspace`。开始一次新修改前，如果 `git status --short` 没有输出，可以先拉取远端更新：
 
 ```sh
 cd /data/zhuxs/cs_learning/00_linux_c_one_shot_learning
